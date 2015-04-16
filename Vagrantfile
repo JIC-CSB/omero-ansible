@@ -14,10 +14,9 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "jayunit100/centos7"
 
-  # Give the virtual machine more RAM and CPU.
+  # Give the virtual machine more RAM.
   config.vm.provider :virtualbox do |v|
      v.memory = 2048
-     v.cpus = 2
   end
 
   # Disable automatic box update checking. If you disable this, then
@@ -32,7 +31,7 @@ Vagrant.configure(2) do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  config.vm.network "private_network", ip: "192.168.33.99"
+  config.vm.network "private_network", ip: "192.168.33.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on

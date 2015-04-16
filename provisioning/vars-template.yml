@@ -21,8 +21,8 @@ omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
 
 
 # Postgres database configuration.
-omero_db_name: omero_database
-omero_db_user: db_user
+omero_db_name: omero
+omero_db_user: omero_db_user
 omero_db_pass: secret
 
 # LDAP authentication configuration.
