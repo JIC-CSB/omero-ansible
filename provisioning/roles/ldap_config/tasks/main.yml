@@ -1,0 +1,14 @@
+---
+# Configure ldap authentication.
+
+
+- name: configure ldap
+  sudo_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config set {{ item.key }} {{ item.value }}"
+  with_items:
+    - { key: 'omero.ldap.config', value: 'true' }
+    - { key: 'omero.ldap.urls', value: '{{ ldap_url }}' }
+    - { key: 'omero.ldap.base', value: '{{ ldap_base }}' }
+    - { key: 'omero.ldap.user_filter', value: '{{ ldap_user_filter }}' }
+    - { key: 'omero.ldap.user_mapping', value: '{{ ldap_user_mapping }}' }
+    - { key: 'omero.ldap.new_user_group', value: '{{ ldap_new_user_group }}' }

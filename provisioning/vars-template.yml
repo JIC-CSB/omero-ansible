@@ -1,0 +1,33 @@
+---
+# Variables to enable customisation of the OMERO server install.
+
+# OMERO version information.
+omero_version: 5.1.0
+omero_branch: b40
+
+# OMERO user configuration.
+omero_user_name: omero
+omero_uid: 10949
+omero_user_password: "$6$rounds=100000$4575ms0oqKD2OFi6$UJ68Uq80NOn8jrQ64e4.OqQoW/KXfga4lndzBqLNo8NdzHIvW7.shMsIhD9YqBlGIq.f6/T.S5sjX7WWUj7KD."
+omero_home: /home/{{ omero_user_name }}
+
+# OMERO directory and command aliases.
+omero_server_link: OMERO.server
+omero_data_mount: /omero_data
+omero_data_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO"
+
+# OMERO command alias.
+omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
+
+
+# Postgres database configuration.
+omero_db_name: omero_database
+omero_db_user: db_user
+omero_db_pass: secret
+
+# LDAP authentication configuration.
+ldap_base: ou=people,dc=example,dc=com
+ldap_url: ldap://example.com:389
+ldap_user_filter: (objectClass=inetOrgPerson)
+ldap_user_mapping: omeName=uid,firstName=givenName,lastName=sn,email=mail
+ldap_new_user_group: public

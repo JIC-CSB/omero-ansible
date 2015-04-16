@@ -1,0 +1,11 @@
+---
+# Configure OMERO to use ldap authentication.
+
+- name: configure ldap authentication
+  hosts: all
+  sudo: true
+  vars_files:
+    - vars.yml
+
+  roles:
+    - ldap_config

@@ -1,0 +1,15 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+export JAVA_HOME=/usr/lib/jvm/jre
+export JRE_HOME=/usr/lib/jvm/jre
+export ICE_HOME=/usr/share/Ice-3.5.1
+export POSTGRES_HOME=/usr
+export OMERO_PREFIX=/home/{{ omero_user_name }}/{{ omero_server_link }}
+export PATH=$PATH:$JAVA_HOME/bin:$ICE_HOME:$POSTGRES_HOME/bin:$OMERO_PREFIX/bin
+export LD_LIBRARY_PATH=/usr/share/java:/usr/lib:/usr/local/lib

@@ -1,0 +1,6 @@
+[zeroc-ice]
+name=Ice 3.5 for RHEL $releasever - $basearch
+baseurl=http://www.zeroc.com/download/Ice/3.5/el$releasever/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=http://www.zeroc.com/download/RPM-GPG-KEY-zeroc-release

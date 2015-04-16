@@ -1,0 +1,31 @@
+---
+# Download and install hdf5.
+
+- name: download the hdf5 source
+  get_url: url=http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.14.tar.gz
+           dest=/tmp/
+
+- name: unpack the hdf5 source tarball
+  command: tar -zxf hdf5-1.8.14.tar.gz
+  args:
+    chdir: /tmp/
+    creates: /tmp/hdf5-1.8.14/README.txt
+
+- name: configure hdf5
+  command: ./configure --prefix=/usr/local --enable-fortran --enable-cxx
+  args:
+    chdir: /tmp/hdf5-1.8.14/
+    creates: /tmp/hdf5-1.8.14/config.log
+  register: configuring_hdf5
+
+- name: make hdf5
+  command: make
+  args:
+    chdir: /tmp/hdf5-1.8.14/
+  when: configuring_hdf5|changed
+
+- name: install hdf5
+  command: make install
+  args:
+    chdir: /tmp/hdf5-1.8.14/
+  when: configuring_hdf5|changed

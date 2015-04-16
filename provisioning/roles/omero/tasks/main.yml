@@ -1,0 +1,147 @@
+---
+# Download and install OMERO.
+
+
+###################################################################
+# Install OMERO server dependencies.
+###################################################################
+  
+- name: add the zeroc repo
+  copy: src=zeroc-ice-el7.repo
+        dest=/etc/yum.repos.d/
+
+- name: install packages
+  yum: name={{ item }}
+       state=present
+  with_items:
+    - ice
+    - ice-servers  # Required for icegridnode.
+    - ice-python
+    - java-1.7.0-openjdk
+
+###################################################################
+# Create and configure the omero user.
+###################################################################
+
+- name: create the omero user
+  user: name={{ omero_user_name }}
+        uid={{ omero_uid }}
+        password={{ omero_user_password }}
+
+- name: set permissions of the omero users home directory
+  file: path="{{ omero_home }}"
+        mode=755
+        state=directory
+
+- name: add omero bashrc file
+  template: src=bashrc
+            dest="{{ omero_home }}/.bashrc"
+            owner={{ omero_user_name }}
+
+
+###################################################################
+# Configure the OMERO data directory.
+###################################################################
+
+- name: create the actual omero data directory
+  file: path={{ omero_data_dir }}
+        owner="{{ omero_user_name }}"
+        group={{ omero_user_name }}
+        state=directory
+
+- name: create link between actual omero data dir and OMERO dir
+  file: src="{{ omero_data_dir }}"
+        dest=/OMERO
+        state=link
+
+###################################################################
+# Download, install and configure the OMERO server.
+###################################################################
+
+- name: download the omero tarball
+  get_url: url=http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}.zip
+           dest={{ omero_home }}
+           owner={{ omero_user_name }}
+           group={{ omero_user_name }}
+
+- name: unpack the omero tarball
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  command: unzip OMERO.server-{{ omero_version }}-ice35-{{ omero_branch}}.zip
+  args:
+    chdir: "{{ omero_home }}"
+    creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}/LICENSE.txt"
+
+- name: make a symbolic link to the omero server directory
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  file: src="{{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}"
+        dest="{{ omero_home }}/{{ omero_server_link }}"
+        state=link
+
+- name: configure the omero database
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config set {{ item.key }} {{ item.value }}"
+  with_items:
+    - { key: 'omero.db.name', value: '{{ omero_db_name }}' }
+    - { key: 'omero.db.user', value: '{{ omero_db_user }}' }
+    - { key: 'omero.db.pass', value: '{{ omero_db_pass }}' }
+
+
+###################################################################
+# Configure the postgres database.
+###################################################################
+
+- name: create the omero postgres user
+  sudo: yes
+  sudo_user: postgres
+  postgresql_user: name="{{ omero_db_user }}"
+                   password="{{ omero_db_pass }}"
+                   role_attr_flags=NOSUPERUSER,NOCREATEDB,NOCREATEROLE
+
+- name: create the omero postgres database
+  sudo: yes
+  sudo_user: postgres
+  postgresql_db: name="{{ omero_db_name }}" 
+                 owner="{{ omero_db_user }}"
+
+- name: define the plpgsql procedural language for the omero postres database
+  sudo: yes
+  sudo_user: postgres
+  ignore_errors: yes
+  command: createlang plpgsql {{ omero_db_name }}
+
+- name: create omero sql script
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} db script --password=omero"
+  args:
+    creates: "{{ omero_home }}/OMERO5.1__1.sql"
+  register: created_omero_sql_script
+
+- name: populate omero database
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/OMERO5.1__1.sql"
+  when: created_omero_sql_script|changed
+
+
+###################################################################
+# Configure the apache server.
+###################################################################
+
+# Use shell instead of command to allow the piping of the output.
+- name: create the apache configuration file
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  shell: "{{ omero_cmd }} web config apache-fcgi > {{ omero_home }}/omero.conf"
+  args:
+    creates: "{{ omero_home }}/omero.conf"
+
+- name: copy the omero apache configuration file to /etc/httpd/conf.d/
+  sudo: yes
+  command: cp {{ omero_home }}/omero.conf /etc/httpd/conf.d/omero.conf
+  args:
+    creates: /etc/httpd/conf.d/omero.conf
+  notify: restart apache

@@ -1,0 +1,24 @@
+---
+# Install the python package dependencies.
+
+- name: install python packages using yum
+  yum: name={{ item }}
+       state=present
+  with_items:
+    - numpy
+    - scipy
+    - Cython
+    - python-matplotlib
+    - python-pillow
+
+- name: install pip
+  yum: name=python-pip
+       state=present
+
+- name: install python packages using pip
+  pip: name={{ item }}
+  with_items:
+    - numexpr
+    - tables
+
+

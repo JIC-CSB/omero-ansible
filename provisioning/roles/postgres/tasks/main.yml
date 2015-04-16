@@ -1,0 +1,42 @@
+---
+
+# Install and configure postgres.
+
+- name: add the postgres repo
+  yum: name=http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
+       state=present
+
+- name: install postgres
+  yum: name={{ item }} state=present
+  with_items:
+    - postgresql94
+    - postgresql94-server
+
+- name: install ansible dependencies for interacting with postgres
+  yum: name={{ item }} state=present
+  with_items:
+    - python-psycopg2    # Required for postgresql_user command.
+    - libselinux-python  # To make it possible to modify files in /var/lib/pgsql/data.
+
+- name: initiate postgres database
+  command: /usr/pgsql-9.4/bin/postgresql94-setup initdb
+           creates=/var/lib/pgsql/9.4/data/postgresql.conf
+
+- name: make IPv4 connections use md5
+  sudo: yes
+  lineinfile: dest=/var/lib/pgsql/9.4/data/pg_hba.conf
+              regexp="^host\s+all\s+all\s+127.0.0.1/32\s+((md5)|(ident))"
+              line="host    all         all         127.0.0.1/32          md5"
+              state=present
+
+- name: make IPv6 connections use md5
+  lineinfile: dest=/var/lib/pgsql/9.4/data/pg_hba.conf
+              regexp="^host\s+all\s+all\s+::1/128\s+((md5)|(ident))"
+              line="host    all         all         ::1/128               md5"
+              state=present
+  sudo: yes
+
+- name: start postgres and enable at boot
+  service: name=postgresql-9.4
+           enabled=yes
+           state=started

@@ -1,0 +1,17 @@
+---
+# Ansible Playbook to install and configure an OMERO 5.1 server.
+
+- name: install omero
+  hosts: all
+  vars_files:
+    - vars.yml
+
+  roles:
+    - epel
+    - build_tools
+    - hdf5
+    - ferm
+    - apache
+    - postgres
+    - python
+    - omero
