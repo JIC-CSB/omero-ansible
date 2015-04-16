@@ -89,6 +89,12 @@
     - { key: 'omero.db.user', value: '{{ omero_db_user }}' }
     - { key: 'omero.db.pass', value: '{{ omero_db_pass }}' }
 
+- name: open up the omero specific ports
+  lineinfile: dest=/etc/ferm/ferm.conf
+              line='proto tcp dport (4063 4064) ACCEPT;'
+              insertafter='# Ansible specified rules.'
+  notify: run ferm
+
 
 ###################################################################
 # Configure the postgres database.
