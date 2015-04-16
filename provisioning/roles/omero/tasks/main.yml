@@ -61,7 +61,7 @@
 
 - name: download the omero tarball
   get_url: url=http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}.zip
-           dest={{ omero_home }}
+           dest={{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}.zip
            owner={{ omero_user_name }}
            group={{ omero_user_name }}
 
