@@ -22,10 +22,23 @@ exit
 
 Create a ``provisioning/vars.yml`` file.
 
-```
+```bash
 cd provisioning
 cp vars-template.yml vars.yml
 vim vars.yml  # Edit as you see fit, passwords in particular.
+```
+
+Check your version of vagrant.
+
+```bash
+vagrant --version
+```
+
+If your version is lower than 1.7.0 edit the ``provisioning/hosts`` file to
+look like the below (note the change in the path to the private key).
+
+```
+omeroserver ansible_ssh_host=192.168.33.10 ansible_ssh_user=root ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key
 ```
 
 Configure the virtual machine with an OMERO 5.1 install using Ansible.
