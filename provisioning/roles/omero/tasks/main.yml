@@ -122,7 +122,7 @@
 - name: create omero sql script
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} db script --password=omero"
+  command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
   args:
     creates: "{{ omero_home }}/OMERO5.1__1.sql"
   register: created_omero_sql_script
