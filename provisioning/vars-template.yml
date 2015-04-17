@@ -5,11 +5,14 @@
 omero_version: 5.1.0
 omero_branch: b40
 
-# OMERO user configuration.
+# OMERO OS user configuration.
 omero_user_name: omero
 omero_uid: 10949
 omero_user_password: "$6$rounds=100000$4575ms0oqKD2OFi6$UJ68Uq80NOn8jrQ64e4.OqQoW/KXfga4lndzBqLNo8NdzHIvW7.shMsIhD9YqBlGIq.f6/T.S5sjX7WWUj7KD."
 omero_home: /home/{{ omero_user_name }}
+
+# OMERO server user configuration
+omero_root_password: omero_root_password
 
 # OMERO directory and command aliases.
 omero_server_link: OMERO.server
