@@ -152,3 +152,18 @@
   args:
     creates: /etc/httpd/conf.d/omero.conf
   notify: restart apache
+
+###################################################################
+# Configure /etc/hosts file with FQDN hostname.
+###################################################################
+
+- name: update /etc/hosts with FQDN hostname
+  lineinfile: dest=/etc/hosts regexp="^({{ item }}\s*)(localhost.*)$" line="\1{{ ansible_fqdn }} \2"
+              backrefs=yes
+              owner=root
+              group=root
+              mode=0644
+              backup=true
+  with_items:
+     - '127\.0\.0\.1'
+     - '::1'
