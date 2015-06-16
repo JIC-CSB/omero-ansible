@@ -2,8 +2,8 @@
 # Variables to enable customisation of the OMERO server install.
 
 # OMERO version information.
-omero_version: 5.1.0
-omero_branch: b40
+omero_version: 5.1.2
+omero_branch: b45
 
 # OMERO OS user configuration.
 omero_user_name: omero
