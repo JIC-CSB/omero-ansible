@@ -88,7 +88,7 @@ cd   # (into the omero home directory)
 
 ## OMERO data storage
 
-This playbook has been designed to allow several OMERO server to point at the
+This playbook has been designed to allow several OMERO servers to point at the
 same root of a mounted file storage.
 
 For example using the default variables with the Vagrant virtual machine
