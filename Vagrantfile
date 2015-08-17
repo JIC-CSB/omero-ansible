@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "jayunit100/centos7"
+  config.vm.box = "chef/centos-7.0"
 
   # Give the virtual machine more RAM.
   config.vm.provider :virtualbox do |v|
