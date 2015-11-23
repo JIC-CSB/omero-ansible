@@ -47,7 +47,6 @@
 - name: create the actual omero data directory
   file: path={{ omero_data_dir }}
         owner="{{ omero_user_name }}"
-        group={{ omero_user_name }}
         state=directory
 
 - name: create link between actual omero data dir and OMERO dir
