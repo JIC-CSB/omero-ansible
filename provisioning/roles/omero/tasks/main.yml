@@ -112,12 +112,6 @@
   postgresql_db: name="{{ omero_db_name }}" 
                  owner="{{ omero_db_user }}"
 
-- name: define the plpgsql procedural language for the omero postres database
-  sudo: yes
-  sudo_user: postgres
-  ignore_errors: yes
-  command: createlang plpgsql {{ omero_db_name }}
-
 - name: create omero sql script
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
