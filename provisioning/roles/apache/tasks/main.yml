@@ -1,9 +1,12 @@
 ---
 # Install and configure apache.
 
-- name: install Apache
-  yum: name=httpd
+- name: install Apache and mod_wsgi
+  yum: name={{ item }}
        state=present
+  with_items:
+    - httpd
+    - mod_wsgi
 
 - name: start apache and enable at boot
   service: name=httpd
