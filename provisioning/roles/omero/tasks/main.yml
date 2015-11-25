@@ -19,7 +19,6 @@
     - ice-python
     - java-1.8.0-openjdk
 
-
 ###################################################################
 # Create and configure the omero user.
 ###################################################################
@@ -94,6 +93,13 @@
               insertafter='# Ansible specified rules.'
   notify: run ferm
 
+###################################################################
+# Install Django.
+###################################################################
+
+- name: install django
+  pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-apache.txt
+
 
 ###################################################################
 # Configure the postgres database.
@@ -117,13 +123,13 @@
   sudo_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
   args:
-    creates: "{{ omero_home }}/OMERO5.1__1.sql"
+    creates: "{{ omero_home }}/OMERO5.2__0.sql"
   register: created_omero_sql_script
 
 - name: populate omero database
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/OMERO5.1__1.sql"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/OMERO5.2__0.sql"
   when: created_omero_sql_script|changed
 
 
@@ -131,13 +137,39 @@
 # Configure the apache server.
 ###################################################################
 
+- name: configure the omero web application server
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config set omero.web.application_server wsgi"
+
+- name: create symlinks for static media files
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} web syncmedia"
+
 # Use shell instead of command to allow the piping of the output.
 - name: create the apache configuration file
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  shell: "{{ omero_cmd }} web config apache-fcgi > {{ omero_home }}/omero.conf"
+  shell: "{{ omero_cmd }} web config apache > {{ omero_home }}/omero.conf"
   args:
     creates: "{{ omero_home }}/omero.conf"
+
+# Fix broken apache 2.4 configuration file.
+# This will be fixed in the next release of OMERO.
+# https://github.com/openmicroscopy/openmicroscopy/pull/4328
+- name: fix FollowSymLinks option
+  lineinfile: dest="{{ omero_home }}/omero.conf"
+              regexp="Options -Indexes FollowSymLinks"
+              line="      Options -Indexes -FollowSymLinks"
+- name: fix Order allow,deny
+  replace: dest="{{ omero_home }}/omero.conf"
+           regexp="^\s+Order allow,deny$"
+- name: fix Allow from all
+  replace: dest="{{ omero_home }}/omero.conf"
+           regexp="^\s+Allow from all$"
+           replace="      Require all granted"
+
 
 - name: copy the omero apache configuration file to /etc/httpd/conf.d/
   sudo: yes
