@@ -15,3 +15,7 @@
     - postgres
     - python
     - omero
+
+  tasks:
+    - name: disable SELinux
+      selinux: state=disabled
