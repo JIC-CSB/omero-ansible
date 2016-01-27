@@ -1,0 +1,14 @@
+---
+
+- name: create the omero backup directory
+  file: path={{ omero_backup_dir }}
+        owner="{{ omero_user_name }}"
+        state=directory
+
+- name: add cron job to backup postgres db
+  cron: name="Backup OMERO postgres DB"
+        minute="1"
+        hour="4"
+        weekday="*"
+        month="*"
+        job="/bin/sudo -u postgres /bin/pg_dump omero > {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql && /bin/chown omero {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql"

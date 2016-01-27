@@ -15,6 +15,7 @@
     - postgres
     - python
     - omero
+    - db_backup
 
   tasks:
     - name: disable SELinux
