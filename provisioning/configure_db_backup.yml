@@ -1,0 +1,11 @@
+---
+# Configure OMERO to dump postgres DB using cron job.
+
+- name: configure ldap authentication
+  hosts: all
+  sudo: true
+  vars_files:
+    - vars.yml
+
+  roles:
+    - db_backup
