@@ -18,6 +18,8 @@ omero_root_password: omero_root_password
 omero_server_link: OMERO.server
 omero_data_mount: /omero_data
 omero_data_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO"
+omero_data_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO"
+omero_backup_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO/db_backup"
 
 # OMERO command alias.
 omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
