@@ -31,8 +31,10 @@ omero_db_user: omero_db_user
 omero_db_pass: secret
 
 # LDAP authentication configuration.
-ldap_base: ou=people,dc=example,dc=com
+ldap_base: dc=example,dc=com
 ldap_url: ldap://example.com:389
 ldap_user_filter: (objectClass=inetOrgPerson)
 ldap_user_mapping: omeName=uid,firstName=givenName,lastName=sn,email=mail
-ldap_new_user_group: public
+ldap_group_filter: (objectClass=groupOfNames)
+ldap_new_user_group: default
+#ldap_new_user_group: ":filtered_dn_attribute:memberOf"
