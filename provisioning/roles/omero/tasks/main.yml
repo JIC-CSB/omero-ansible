@@ -117,6 +117,7 @@
   sudo_user: postgres
   postgresql_db: name="{{ omero_db_name }}" 
                  owner="{{ omero_db_user }}"
+  register: created_omero_database
 
 - name: create omero sql script
   sudo: yes
@@ -124,13 +125,12 @@
   command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
   args:
     creates: "{{ omero_home }}/OMERO5.2__0.sql"
-  register: created_omero_sql_script
 
 - name: populate omero database
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
   shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/OMERO5.2__0.sql"
-  when: created_omero_sql_script|changed
+  when: created_omero_database|changed
 
 
 ###################################################################
