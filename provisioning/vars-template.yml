@@ -36,5 +36,6 @@ ldap_url: ldap://example.com:389
 ldap_user_filter: (objectClass=inetOrgPerson)
 ldap_user_mapping: omeName=uid,firstName=givenName,lastName=sn,email=mail
 ldap_group_filter: (objectClass=groupOfNames)
+ldap_group_mapping: name=cn
 ldap_new_user_group: default
 #ldap_new_user_group: ":filtered_dn_attribute:memberOf"
