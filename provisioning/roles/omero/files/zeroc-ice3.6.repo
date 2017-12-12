@@ -1,0 +1,20 @@
+[zeroc-ice3.6]
+name=ZeroC Ice 3.6
+baseurl=https://zeroc.com/download/Ice/3.6/el7/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://zeroc.com/download/GPG-KEY-zeroc-release-5E6DA83306132997
+
+[zeroc-ice3.6-noarch]
+name=ZeroC Ice 3.6 (noarch)
+baseurl=https://zeroc.com/download/Ice/3.6/el7/noarch
+enabled=1
+gpgcheck=1
+gpgkey=https://zeroc.com/download/GPG-KEY-zeroc-release-5E6DA83306132997
+
+[zeroc-ice3.6-src]
+name=ZeroC Ice 3.6 (SRPMS)
+baseurl=https://zeroc.com/download/Ice/3.6/el7/SRPMS
+enabled=1
+gpgcheck=1
+gpgkey=https://zeroc.com/download/GPG-KEY-zeroc-release-5E6DA83306132997

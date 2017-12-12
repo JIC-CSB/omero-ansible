@@ -3,8 +3,9 @@
 # Install and configure postgres.
 
 - name: add the postgres repo
-  yum: name=http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
-       state=present
+  yum:
+    name: http://yum.postgresql.org/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+    state: present
 
 - name: install postgres
   yum: name={{ item }} state=present

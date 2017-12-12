@@ -11,7 +11,7 @@
     - build_tools
     - hdf5
     - ferm
-    - apache
+    - nginx
     - postgres
     - python
     - omero

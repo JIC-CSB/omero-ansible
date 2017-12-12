@@ -11,4 +11,4 @@
         hour="4"
         weekday="*"
         month="*"
-        job="/bin/sudo -u postgres /bin/pg_dump omero > {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql && /bin/chown omero {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql"
+        job="su -c '/bin/pg_dump omero > {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql && /bin/chown omero {{ omero_backup_dir}}/$(/bin/date +\%Y-\%m-\%d-\%H-\%M).sql' -s /bin/sh postgres"

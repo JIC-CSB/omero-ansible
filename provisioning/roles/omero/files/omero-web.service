@@ -1,0 +1,17 @@
+[Unit]
+Description=OMERO.web
+# Not mandatory, Nginx may be running on a different server
+Requires=nginx.service
+After=network.service
+
+[Service]
+User=omero
+Type=forking
+PIDFile=/home/omero/OMERO.py/var/django.pid
+Restart=no
+RestartSec=10
+ExecStart=/bin/python /home/omero/OMERO.py/bin/omero web start
+ExecStop=/bin/python /home/omero/OMERO.py/bin/omero web stop
+
+[Install]
+WantedBy=multi-user.target

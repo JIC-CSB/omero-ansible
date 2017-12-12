@@ -2,8 +2,8 @@
 # Variables to enable customisation of the OMERO server install.
 
 # OMERO version information.
-omero_version: 5.2.3
-omero_branch: b22
+omero_version: 5.3.1
+omero_branch: b61
 
 # OMERO OS user configuration.
 omero_user_name: omero
@@ -20,6 +20,8 @@ omero_data_mount: /omero_data
 omero_data_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO"
 omero_data_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO"
 omero_backup_dir: "{{ omero_data_mount }}/{{ ansible_hostname }}/OMERO/db_backup"
+omero_web_link: OMERO.py
+omero_web_server: localhost
 
 # OMERO command alias.
 omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
@@ -29,6 +31,9 @@ omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
 omero_db_name: omero
 omero_db_user: omero_db_user
 omero_db_pass: secret
+
+# ICE version configuration.
+ice_version: ice36
 
 # LDAP authentication configuration.
 ldap_base: dc=example,dc=com

@@ -7,26 +7,83 @@
 ###################################################################
   
 - name: add the zeroc repo
-  copy: src=zeroc-ice-el7.repo
-        dest=/etc/yum.repos.d/
+  copy:
+    src: zeroc-ice3.6.repo
+    dest: /etc/yum.repos.d/
 
-- name: install packages
+- name: install ICE packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ice-all-runtime
+    - ice-all-devel
+
+- name: install other packages
   yum: name={{ item }}
        state=present
   with_items:
-    - ice
-    - ice-servers  # Required for icegridnode.
-    - ice-python
+    - libdb-utils
+    - openssl-devel
+    - bzip2-devel
+    - expat-devel
     - java-1.8.0-openjdk
+
+- name: install virtualenv
+  pip: name=virtualenv
+
+###################################################################
+# Set up ICE
+###################################################################
+
+- name: install ICE Python modules
+  pip: 
+    name: zeroc-ice
+    version: 3.6
+
+- name: open up the ICE port
+  lineinfile:
+    dest: /etc/ferm/ferm.conf
+    line: 'proto tcp dport 4061 ACCEPT;'
+    insertafter: '# Ansible specified rules.'
+  notify: run ferm
+
+###################################################################
+# Disable SELINUX
+###################################################################
+#- name: install selinux utils
+#  yum: name={{ item }}
+#       state=present
+#  with_items:
+#    - policycoreutils-python
+#    - libselinux-python
+#    - libsemanage-python
+#
+#- name: enable httpd_read_user_content
+#  seboolean: name=httpd_read_user_content
+#             state=yes
+#             persistent=yes
+#
+#- name: enable httpd_enable_homedirs
+#  seboolean: name=httpd_enable_homedirs
+#             state=yes
+#             persistent=yes
+#
+#- name: open port 4080
+#  seport: ports=4080
+#          proto=tcp
+#          setype=http_port_t
+#          state=present
 
 ###################################################################
 # Create and configure the omero user.
 ###################################################################
 
 - name: create the omero user
-  user: name={{ omero_user_name }}
-        uid={{ omero_uid }}
-        password={{ omero_user_password }}
+  user:
+    name: "{{ omero_user_name }}"
+    uid: "{{ omero_uid }}"
+    password: "{{ omero_user_password }}"
 
 - name: set permissions of the omero users home directory
   file: path="{{ omero_home }}"
@@ -37,7 +94,6 @@
   template: src=bashrc
             dest="{{ omero_home }}/.bashrc"
             owner={{ omero_user_name }}
-
 
 ###################################################################
 # Configure the OMERO data directory.
@@ -58,23 +114,23 @@
 ###################################################################
 
 - name: download the omero tarball
-  get_url: url=http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}.zip
-           dest={{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}.zip
+  get_url: url=http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip
+           dest={{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip
            owner={{ omero_user_name }}
            group={{ omero_user_name }}
 
 - name: unpack the omero tarball
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  command: unzip OMERO.server-{{ omero_version }}-ice35-{{ omero_branch}}.zip
+  command: unzip OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch}}.zip
   args:
     chdir: "{{ omero_home }}"
-    creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}/LICENSE.txt"
+    creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}/LICENSE.txt"
 
 - name: make a symbolic link to the omero server directory
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  file: src="{{ omero_home }}/OMERO.server-{{ omero_version }}-ice35-{{ omero_branch }}"
+  file: src="{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
         dest="{{ omero_home }}/{{ omero_server_link }}"
         state=link
 
@@ -98,7 +154,7 @@
 ###################################################################
 
 - name: install django
-  pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-apache.txt
+  pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
 
 
 ###################################################################
@@ -124,23 +180,47 @@
   sudo_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
   args:
-    creates: "{{ omero_home }}/OMERO5.2__0.sql"
+    creates: "{{ omero_home }}/OMERO5.3__0.sql"
 
 - name: populate omero database
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/OMERO5.2__0.sql"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/{{ omero_db_dump }}"
   when: created_omero_database|changed
+
+###################################################################
+# Install OMERO.web
+###################################################################
+
+- name: unpack the omero tarball
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  unarchive: remote_src=yes
+             src=http://downloads.openmicroscopy.org/omero/5.3.1/artifacts/OMERO.py-5.3.1-ice36-b61.zip
+             dest={{ omero_home }}
+             keep_newer=yes
+
+- name: make a symbolic link to the omero web directory
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  file: src="{{ omero_home }}/OMERO.py-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
+        dest="{{ omero_home }}/{{ omero_web_link }}"
+        state=link
+
+- name: install OMERO.web prerequisites
+  sudo: yes
+  sudo_user: "{{ omero_user_name }}"
+  pip: requirements="{{ omero_home }}/{{ omero_web_link }}/share/web/requirements-py27.txt"
 
 
 ###################################################################
-# Configure the apache server.
+# Configure the OMERO web server.
 ###################################################################
 
 - name: configure the omero web application server
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} config set omero.web.application_server wsgi"
+  command: "{{ omero_cmd }} config set omero.web.application_server wsgi-tcp"
 
 - name: create symlinks for static media files
   sudo: yes
@@ -148,19 +228,29 @@
   command: "{{ omero_cmd }} web syncmedia"
 
 # Use shell instead of command to allow the piping of the output.
-- name: create the apache configuration file
+- name: create the nginx configuration file
   sudo: yes
   sudo_user: "{{ omero_user_name }}"
-  shell: "{{ omero_cmd }} web config apache24 > {{ omero_home }}/omero.conf"
+  shell: "{{ omero_cmd }} web config nginx --http 80 --servername {{ omero_web_server }} > {{ omero_home }}/omero.conf"
   args:
     creates: "{{ omero_home }}/omero.conf"
-
-- name: copy the omero apache configuration file to /etc/httpd/conf.d/
+- 
+name: disable the nginx's default configuration
   sudo: yes
-  command: cp {{ omero_home }}/omero.conf /etc/httpd/conf.d/omero.conf
-  args:
-    creates: /etc/httpd/conf.d/omero.conf
-  notify: restart apache
+  replace: dest=/etc/nginx/nginx.conf
+           regexp='( default_server.* )'
+           replace='#\1'
+           backup=yes
+
+- name: create a service conf file
+  copy: src=omero-web.service
+        dest=/etc/systemd/system/
+
+- name: start omero-web.service
+  systemd: daemon_reload=yes
+           enabled=yes
+           name=omero-web
+           state=started
 
 ###################################################################
 # Configure /etc/hosts file with FQDN hostname.
