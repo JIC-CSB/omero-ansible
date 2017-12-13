@@ -3,7 +3,7 @@
 
 - name: configure postgres backup
   hosts: all
-  sudo: true
+  become: true
   vars_files:
     - vars.yml
 

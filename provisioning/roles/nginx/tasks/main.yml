@@ -12,15 +12,15 @@
     enabled: yes
     state: started
 
-- name: copy over nginx.conf with default site commented out
-  synchronize:
-    src: "{{ role_path }}/files/nginx.conf"
-    dest: /etc/nginx/nginx.conf
-
 - name: open up http, https
   lineinfile:
     dest: /etc/ferm/ferm.conf
     line: 'proto tcp dport (http https) ACCEPT;'
     insertafter: '# Ansible specified rules.'
   notify: run ferm
+
+- name: copy over nginx.conf with default site commented out
+  copy:
+    src: "{{ role_path }}/files/nginx.conf"
+    dest: /etc/nginx/nginx.conf
 

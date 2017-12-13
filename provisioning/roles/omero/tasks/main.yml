@@ -120,23 +120,23 @@
            group={{ omero_user_name }}
 
 - name: unpack the omero tarball
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   command: unzip OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch}}.zip
   args:
     chdir: "{{ omero_home }}"
     creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}/LICENSE.txt"
 
 - name: make a symbolic link to the omero server directory
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   file: src="{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
         dest="{{ omero_home }}/{{ omero_server_link }}"
         state=link
 
 - name: configure the omero database
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} config set {{ item.key }} {{ item.value }}"
   with_items:
     - { key: 'omero.db.name', value: '{{ omero_db_name }}' }
@@ -162,30 +162,30 @@
 ###################################################################
 
 - name: create the omero postgres user
-  sudo: yes
-  sudo_user: postgres
+  become: yes
+  become_user: postgres
   postgresql_user: name="{{ omero_db_user }}"
                    password="{{ omero_db_pass }}"
                    role_attr_flags=NOSUPERUSER,NOCREATEDB,NOCREATEROLE
 
 - name: create the omero postgres database
-  sudo: yes
-  sudo_user: postgres
+  become: yes
+  become_user: postgres
   postgresql_db: name="{{ omero_db_name }}" 
                  owner="{{ omero_db_user }}"
   register: created_omero_database
 
 - name: create omero sql script
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
   args:
-    creates: "{{ omero_home }}/OMERO5.3__0.sql"
+    creates: "{{ omero_home }}/{{ omero_schema_sql }}"
 
-- name: populate omero database
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
-  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/{{ omero_db_dump }}"
+- name: create omero schema
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/{{ omero_schema_sql }}"
   when: created_omero_database|changed
 
 ###################################################################
@@ -193,23 +193,23 @@
 ###################################################################
 
 - name: unpack the omero tarball
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   unarchive: remote_src=yes
              src=http://downloads.openmicroscopy.org/omero/5.3.1/artifacts/OMERO.py-5.3.1-ice36-b61.zip
              dest={{ omero_home }}
              keep_newer=yes
 
 - name: make a symbolic link to the omero web directory
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   file: src="{{ omero_home }}/OMERO.py-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
         dest="{{ omero_home }}/{{ omero_web_link }}"
         state=link
 
 - name: install OMERO.web prerequisites
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   pip: requirements="{{ omero_home }}/{{ omero_web_link }}/share/web/requirements-py27.txt"
 
 
@@ -218,29 +218,29 @@
 ###################################################################
 
 - name: configure the omero web application server
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} config set omero.web.application_server wsgi-tcp"
 
 - name: create symlinks for static media files
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} web syncmedia"
 
 # Use shell instead of command to allow the piping of the output.
 - name: create the nginx configuration file
-  sudo: yes
-  sudo_user: "{{ omero_user_name }}"
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  become_method: su
   shell: "{{ omero_cmd }} web config nginx --http 80 --servername {{ omero_web_server }} > {{ omero_home }}/omero.conf"
-  args:
-    creates: "{{ omero_home }}/omero.conf"
-- 
-name: disable the nginx's default configuration
-  sudo: yes
-  replace: dest=/etc/nginx/nginx.conf
-           regexp='( default_server.* )'
-           replace='#\1'
-           backup=yes
+
+- name: put nginx config file in nginx config area
+  become: yes
+  copy:
+    src: "{{ omero_home }}/omero.conf"
+    dest: /etc/nginx/conf.d/
+    remote_src: yes
+  notify: restart nginx
 
 - name: create a service conf file
   copy: src=omero-web.service

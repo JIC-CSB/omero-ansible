@@ -2,7 +2,7 @@
 # Download and install hdf5.
 
 - name: download the hdf5 source
-  get_url: url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.14/src/hdf5-1.8.14.tar.gz
+  get_url: url=https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.14/src/hdf5-1.8.14.tar.gz
            dest=/usr/local/src/hdf5-1.8.14.tar.gz
 
 - name: unpack the hdf5 source tarball

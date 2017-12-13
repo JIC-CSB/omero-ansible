@@ -8,8 +8,9 @@ omero_branch: b61
 # OMERO OS user configuration.
 omero_user_name: omero
 omero_uid: 10949
-omero_user_password: "$6$rounds=100000$4575ms0oqKD2OFi6$UJ68Uq80NOn8jrQ64e4.OqQoW/KXfga4lndzBqLNo8NdzHIvW7.shMsIhD9YqBlGIq.f6/T.S5sjX7WWUj7KD."
+omero_user_password: ""
 omero_home: /home/{{ omero_user_name }}
+omero_schema_sql: OMERO5.3__0.sql
 
 # OMERO server user configuration
 omero_root_password: omero_root_password
@@ -30,7 +31,7 @@ omero_cmd: "{{ omero_home }}/{{ omero_server_link }}/bin/omero"
 # Postgres database configuration.
 omero_db_name: omero
 omero_db_user: omero_db_user
-omero_db_pass: secret
+omero_db_pass: ""
 
 # ICE version configuration.
 ice_version: ice36

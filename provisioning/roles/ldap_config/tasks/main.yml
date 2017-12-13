@@ -3,7 +3,7 @@
 
 
 - name: configure ldap
-  sudo_user: "{{ omero_user_name }}"
+  become_user: "{{ omero_user_name }}"
   command: "{{ omero_cmd }} config set {{ item.key }} {{ item.value }}"
   with_items:
     - { key: 'omero.ldap.config', value: 'true' }
