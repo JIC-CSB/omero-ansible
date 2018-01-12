@@ -1,0 +1,5 @@
+---
+
+old_version: 5.2.3
+new_version: 5.3.1
+omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/OMERO5.3__0/OMERO5.2__0.sql"

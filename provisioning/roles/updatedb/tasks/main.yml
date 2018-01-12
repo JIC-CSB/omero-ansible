@@ -1,0 +1,27 @@
+---
+# Tasks to update an OMERO server and database
+
+- name: backup the existing database
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: "{{ omero_db_name }}"
+    state: dump
+    target: "omero-{{ old_version }}.pre-{{ new_version }}.dump.gz" 
+    owner: "{{ omero_db_user }}"
+
+# looks like Ansible postgresql_db restore won't load a postgres dump file yet
+# https://github.com/ansible/ansible-modules-core/issues/2731
+#- name: update the schema to new_version
+#  become: yes
+#  become_user: postgres
+#  postgresql_db:
+#    name: "{{ omero_db_name }}"
+#    state: restore
+#    target: "{{ omero_update_patch }}" 
+#    owner: "{{ omero_db_user }}"
+
+- name: use shell to patch the DB to new version
+  become: yes
+  become_user: postgres
+  shell: "psql omero < {{ omero_update_patch }}"
