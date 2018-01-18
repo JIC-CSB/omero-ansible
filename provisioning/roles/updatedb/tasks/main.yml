@@ -3,12 +3,14 @@
 
 - name: backup the existing database
   become: yes
-  become_user: postgres
+  become_user: omero
   postgresql_db:
     name: "{{ omero_db_name }}"
     state: dump
+    login_host: localhost
+    login_user: "{{ omero_db_user }}"
+    login_password: "{{ omero_db_pass }}"
     target: "omero-{{ old_version }}.pre-{{ new_version }}.dump.gz" 
-    owner: "{{ omero_db_user }}"
 
 # looks like Ansible postgresql_db restore won't load a postgres dump file yet
 # https://github.com/ansible/ansible-modules-core/issues/2731
@@ -23,5 +25,12 @@
 
 - name: use shell to patch the DB to new version
   become: yes
-  become_user: postgres
-  shell: "psql omero < {{ omero_update_patch }}"
+  become_user: "{{ omero_user_name }}"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_update_patch }}"
+
+- name: copy config of older version
+  copy:
+    src: "{{ previous_installation }}/etc/grid/config.xml"
+    dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
+    remote_src: yes
+  notify: run ferm

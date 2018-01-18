@@ -7,4 +7,5 @@
     - vars.yml
 
   roles:
+    - get_omero_version
     - updatedb

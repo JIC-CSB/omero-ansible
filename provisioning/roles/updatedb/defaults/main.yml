@@ -1,5 +1,14 @@
 ---
 
-old_version: 5.2.3
-new_version: 5.3.1
-omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/OMERO5.3__0/OMERO5.2__0.sql"
+# Version of OMERO we're upgrading from
+old_version: 5.3.1
+
+# Version of OMERO we're upgrading to
+new_version: 5.4.1
+
+# Path to the SQL file that updates the OMERO schema
+omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/OMERO5.4__0/OMERO5.3__0.sql"
+
+# Path to the version we're upgrading from
+# (Need this to copy over the config)
+previous_installation: "{{ omero_home }}/OMERO.server-5.3.1-ice36-b61"
