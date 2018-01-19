@@ -10,11 +10,11 @@
     login_host: localhost
     login_user: "{{ omero_db_user }}"
     login_password: "{{ omero_db_pass }}"
-    target: "omero-{{ old_version }}.pre-{{ new_version }}.dump.gz" 
+    target: "omero-{{ old_version }}.pre-{{ omero_version }}.dump.gz" 
 
 # looks like Ansible postgresql_db restore won't load a postgres dump file yet
 # https://github.com/ansible/ansible-modules-core/issues/2731
-#- name: update the schema to new_version
+#- name: update the schema to omero_version
 #  become: yes
 #  become_user: postgres
 #  postgresql_db:
@@ -26,11 +26,16 @@
 - name: use shell to patch the DB to new version
   become: yes
   become_user: "{{ omero_user_name }}"
-  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_update_patch }}"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_update_patch }} > {{ omero_update_db_output }}"
+
+- name: grep the output of the SQL patch to see if it succeeded
+  shell: "grep SUCCESS {{ omero_update_db_output }} | cat"
+  register: grep_output
 
 - name: copy config of older version
   copy:
     src: "{{ previous_installation }}/etc/grid/config.xml"
     dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
     remote_src: yes
+  when: grep_output.stdout
   notify: run ferm

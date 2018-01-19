@@ -1,0 +1,20 @@
+---
+# Get the tarball of OMERO.server that matches {{ omero_version }}
+
+- name: download and uninstall the omero tarball
+  unarchive:
+    src: "http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip"
+    remote_src: yes
+    dest: "{{ omero_home }}"
+    owner: "{{ omero_user_name }}"
+    group: "{{ omero_user_name }}"
+    creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}/LICENSE.txt"
+
+- name: make a symbolic link to the omero server directory
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  file:
+    src: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
+    dest: "{{ omero_home }}/{{ omero_server_link }}"
+    state: link
+

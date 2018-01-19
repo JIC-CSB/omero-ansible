@@ -1,5 +1,5 @@
 ---
-# Ansible Playbook to install and configure an OMERO 5.1 server.
+# Ansible Playbook to install and configure an OMERO 5.4.1 server.
 
 - name: install omero
   hosts: all

@@ -48,32 +48,6 @@
     insertafter: '# Ansible specified rules.'
   notify: run ferm
 
-###################################################################
-# Disable SELINUX
-###################################################################
-#- name: install selinux utils
-#  yum: name={{ item }}
-#       state=present
-#  with_items:
-#    - policycoreutils-python
-#    - libselinux-python
-#    - libsemanage-python
-#
-#- name: enable httpd_read_user_content
-#  seboolean: name=httpd_read_user_content
-#             state=yes
-#             persistent=yes
-#
-#- name: enable httpd_enable_homedirs
-#  seboolean: name=httpd_enable_homedirs
-#             state=yes
-#             persistent=yes
-#
-#- name: open port 4080
-#  seport: ports=4080
-#          proto=tcp
-#          setype=http_port_t
-#          state=present
 
 ###################################################################
 # Create and configure the omero user.
@@ -113,26 +87,27 @@
 # Download, install and configure the OMERO server.
 ###################################################################
 
-- name: download the omero tarball
-  get_url: url=http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip
-           dest={{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip
-           owner={{ omero_user_name }}
-           group={{ omero_user_name }}
-
-- name: unpack the omero tarball
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  command: unzip OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch}}.zip
-  args:
-    chdir: "{{ omero_home }}"
+- name: download and uninstall the omero tarball
+  unarchive:
+    src: "http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip"
+    remote_src: yes
+    dest: "{{ omero_home }}"
+    owner: "{{ omero_user_name }}"
+    group: "{{ omero_user_name }}"
     creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}/LICENSE.txt"
 
 - name: make a symbolic link to the omero server directory
   become: yes
   become_user: "{{ omero_user_name }}"
-  file: src="{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
-        dest="{{ omero_home }}/{{ omero_server_link }}"
-        state=link
+  file:
+    src: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
+    dest: "{{ omero_home }}/{{ omero_server_link }}"
+    state: link
+
+- name: install OMERO prerequisite software
+  become: yes
+  become_user: root
+  pip: requirements="{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27.txt"
 
 - name: configure the omero database
   become: yes
@@ -144,9 +119,10 @@
     - { key: 'omero.db.pass', value: '{{ omero_db_pass }}' }
 
 - name: open up the omero specific ports
-  lineinfile: dest=/etc/ferm/ferm.conf
-              line='proto tcp dport (4063 4064) ACCEPT;'
-              insertafter='# Ansible specified rules.'
+  lineinfile:
+    dest: /etc/ferm/ferm.conf
+    line: 'proto tcp dport (4063 4064) ACCEPT;'
+    insertafter: '# Ansible specified rules.'
   notify: run ferm
 
 ###################################################################
@@ -156,7 +132,6 @@
 - name: install django
   pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
 
-
 ###################################################################
 # Configure the postgres database.
 ###################################################################
@@ -164,15 +139,17 @@
 - name: create the omero postgres user
   become: yes
   become_user: postgres
-  postgresql_user: name="{{ omero_db_user }}"
-                   password="{{ omero_db_pass }}"
-                   role_attr_flags=NOSUPERUSER,NOCREATEDB,NOCREATEROLE
+  postgresql_user:
+    name: "{{ omero_db_user }}"
+    password: "{{ omero_db_pass }}"
+    role_attr_flags: "NOSUPERUSER,NOCREATEDB,NOCREATEROLE"
 
 - name: create the omero postgres database
   become: yes
   become_user: postgres
-  postgresql_db: name="{{ omero_db_name }}" 
-                 owner="{{ omero_db_user }}"
+  postgresql_db:
+    name: "{{ omero_db_name }}" 
+    owner: "{{ omero_db_user }}"
   register: created_omero_database
 
 - name: create omero sql script
@@ -187,31 +164,6 @@
   become_user: "{{ omero_user_name }}"
   shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/{{ omero_schema_sql }}"
   when: created_omero_database|changed
-
-###################################################################
-# Install OMERO.web
-###################################################################
-
-- name: unpack the omero tarball
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  unarchive: remote_src=yes
-             src=http://downloads.openmicroscopy.org/omero/5.3.1/artifacts/OMERO.py-5.3.1-ice36-b61.zip
-             dest={{ omero_home }}
-             keep_newer=yes
-
-- name: make a symbolic link to the omero web directory
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  file: src="{{ omero_home }}/OMERO.py-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
-        dest="{{ omero_home }}/{{ omero_web_link }}"
-        state=link
-
-- name: install OMERO.web prerequisites
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  pip: requirements="{{ omero_home }}/{{ omero_web_link }}/share/web/requirements-py27.txt"
-
 
 ###################################################################
 # Configure the OMERO web server.
@@ -241,16 +193,6 @@
     dest: /etc/nginx/conf.d/
     remote_src: yes
   notify: restart nginx
-
-- name: create a service conf file
-  copy: src=omero-web.service
-        dest=/etc/systemd/system/
-
-- name: start omero-web.service
-  systemd: daemon_reload=yes
-           enabled=yes
-           name=omero-web
-           state=started
 
 ###################################################################
 # Configure /etc/hosts file with FQDN hostname.
