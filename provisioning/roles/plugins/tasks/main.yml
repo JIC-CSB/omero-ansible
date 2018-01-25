@@ -1,0 +1,20 @@
+---
+# Tasks to install list of OMERO plugins
+
+- name: install OMERO plugins using pip
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - "{{ pip_plugins }}"
+
+- name: add plugins to omero config
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config append omero.web.apps '\"{{ item }}\"'"
+  with_items: "{{ omero_plugin_names }}"
+
+- name: add any extra plugin config
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command : "{{ omero_cmd }} config {{ item.value.cmd }} {{ item.value.var }} '{{ item.value.setting }}'"
+  with_dict: "{{ plugins_config }}"

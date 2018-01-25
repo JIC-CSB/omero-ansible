@@ -1,0 +1,10 @@
+---
+# Ansible Playbook to install OMERO webclient plugins
+
+- name: install selection of OMERO plugins
+  hosts: all
+  vars_files:
+    - vars.yml
+
+  roles:
+    - plugins
