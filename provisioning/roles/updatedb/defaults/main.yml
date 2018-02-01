@@ -2,9 +2,11 @@
 
 # Version of OMERO we're upgrading from
 # Use omero_version from provisioning/vars.yml for new version
-old_version: 5.3.1
+old_version: 5.4.1
+old_underscore_version: "OMERO5.4__0"
 
-old_underscore_version: "OMERO5.3__0"
+# Is it a major update e.g. moving from 5.3 to 5.4
+major_update: false
 
 # Path to the SQL file that updates the OMERO schema
 omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/{{ omero_underscore_version }}/{{ old_underscore_version }}.sql"
@@ -12,6 +14,9 @@ omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/{{ omero_
 # File to capture the output of the SQL update update patch
 omero_update_db_output: "{{ omero_home }}/omero.patch.{{ old_version }}_{{ omero_version }}.out.txt"
 
+# Do we want to copy the config from the previous installation?
+copy_config: true
+
 # Path to the version we're upgrading from
 # (Need this to copy over the config)
-previous_installation: "{{ omero_home }}/OMERO.server-5.3.1-ice36-b61"
+previous_installation: "{{ omero_home }}/OMERO.server-5.4.1-ice36-b75"

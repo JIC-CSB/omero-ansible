@@ -18,3 +18,7 @@
     dest: "{{ omero_home }}/{{ omero_server_link }}"
     state: link
 
+- name: install OMERO prerequisite software
+  become: yes
+  become_user: root
+  pip: requirements="{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27.txt"

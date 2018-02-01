@@ -27,15 +27,11 @@
   become: yes
   become_user: "{{ omero_user_name }}"
   shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_update_patch }} > {{ omero_update_db_output }}"
-
-- name: grep the output of the SQL patch to see if it succeeded
-  shell: "grep SUCCESS {{ omero_update_db_output }} | cat"
-  register: grep_output
+  when: major_update
 
 - name: copy config of older version
   copy:
     src: "{{ previous_installation }}/etc/grid/config.xml"
     dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
     remote_src: yes
-  when: grep_output.stdout
-  notify: run ferm
+  when: copy_config
