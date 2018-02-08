@@ -30,6 +30,8 @@
   when: major_update
 
 - name: copy config of older version
+  become: yes
+  become_user: "{{ omero_user_name }}"
   copy:
     src: "{{ previous_installation }}/etc/grid/config.xml"
     dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
