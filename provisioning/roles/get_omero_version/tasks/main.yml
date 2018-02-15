@@ -22,3 +22,28 @@
   become: yes
   become_user: root
   pip: requirements="{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27.txt"
+
+# Configure the web server
+
+- name: configure the omero web application server
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config set omero.web.application_server wsgi-tcp"
+
+- name: create symlinks for static media files
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} web syncmedia"
+
+# Install Django.
+
+- name: install django
+  pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
+
+# Switch off httpd
+
+- name: disable Apache httpd
+  become: yes
+  service: 
+    name: httpd
+    enabled: no

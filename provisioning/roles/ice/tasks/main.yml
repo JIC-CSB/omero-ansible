@@ -1,0 +1,33 @@
+---
+# Download, install & configure ICE
+
+- name: add the zeroc repo
+  get_url:
+    url: https://zeroc.com/download/Ice/3.6/el7/zeroc-ice3.6.repo
+    dest: /etc/yum.repos.d/
+
+- name: install ICE packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ice-all-runtime
+    - ice-all-devel
+
+- name: install other packages
+  yum: name={{ item }}
+       state=present
+  with_items:
+    - bzip2-devel
+    - openssl-devel
+  
+- name: install ICE Python modules
+  pip: 
+    name: zeroc-ice
+    version: 3.6
+
+- name: open up the ICE port
+  lineinfile:
+    dest: /etc/ferm/ferm.conf
+    line: 'proto tcp dport 4061 ACCEPT;'
+    insertafter: '# Ansible specified rules.'

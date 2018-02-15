@@ -1,20 +1,72 @@
 ---
 # Tasks to install list of OMERO plugins
 
+- name: install dependencies
+  become: yes
+  package: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ plugin_dependencies }}"
+
 - name: install OMERO plugins using pip
   pip:
     name: "{{ item }}"
   with_items:
     - "{{ pip_plugins }}"
 
-- name: add plugins to omero config
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} config append omero.web.apps '\"{{ item }}\"'"
-  with_items: "{{ omero_plugin_names }}"
+- name: check if iviewer has already been configured
+  command: "grep iviewer {{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
+  register: check_iviewer
+  ignore_errors: yes
+  changed_when: no
 
-- name: add any extra plugin config
+- name: append iviewer to web.apps
   become: yes
   become_user: "{{ omero_user_name }}"
-  command : "{{ omero_cmd }} config {{ item.value.cmd }} {{ item.value.var }} '{{ item.value.setting }}'"
-  with_dict: "{{ plugins_config }}"
+  command: "{{ omero_cmd }} config append omero.web.apps '\"omero_iviewer\"'"
+  when: check_iviewer|failed
+
+- name: set iviewer to be default viewer
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command : "{{ omero_cmd }} config set omero.web.viewer.view omero_iviewer.views.index"
+  when: check_iviewer|failed
+
+- name: enable 'open with...' iviewer
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config append omero.web.open_with ['omero_iviewer', 'omero_iviewer_index', {'supported_objects':['images', 'dataset', 'well'], 'script_url': 'omero_iviewer/openwith.js', 'label': 'OMERO.iviewer'}]"
+  when: check_iviewer|failed
+
+- name: check if figure has already been configured
+  command: "grep figure {{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
+  register: check_figure
+  ignore_errors: yes
+  changed_when: no
+
+- name: append figure to web.apps
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config append omero.web.apps '\"omero_figure\"'"
+  when: check_figure|failed
+
+- name: add figure to top links
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config append omero.web.ui.top_links ['Figure', 'figure_index', {'title': 'Open Figure in new tab', 'target': '_blank'}]"
+  when: check_figure|failed
+
+- name: enable 'open with...' figure
+  become: yes
+  become_user: "{{ omero_user }}"
+  command: "{{ omero_cmd }} config append omero.web.open_with ['omero_figure', 'new_figure', {'supported_objects':['images'], 'target': '_blank', 'label': 'OMERO.figure'}]"
+  when: check_figure|failed
+
+- name: upload PDF script for omero-figure
+  become: yes
+  become_user: "{{ omero_user_name }}"
+  command : "{{ omero_cmd }} script upload omero/figure_scripts/Figure_To_Pdf.py --official --user root --password {{ omero_root_password  }} --server {{ inventory_hostname }}"
+  args:
+    chdir: "{{ python_lib_path }}/omero_figure/scripts"
+    creates: "{{ omero_home }}/{{ omero_server_link }}/lib/scripts/omero/figure_scripts/Figure_To_Pdf.py"

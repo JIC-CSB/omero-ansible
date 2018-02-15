@@ -1,33 +1,16 @@
 ---
 
+plugin_dependencies:
+  - python-reportlab
+
 pip_plugins:
-  - "omero-webtagging-autotag"
+  # - "omero-webtagging-autotag"
   - "omero-iviewer"
   - "omero-figure"
 
 omero_plugin_names:
-  - "omero_webtagging_autotag"
+  # - "omero_webtagging_autotag"
   - "omero_iviewer"
   - "omero_figure"
 
-plugins_config:
-  autotag:
-    cmd: append
-    var: omero.web.ui.center_plugins 
-    setting: '["Auto Tag", "omero_webtagging_autotag/auto_tag_init.js.html", "auto_tag_panel"]'
-  set_viewer:
-    cmd: set
-    var: omero.web.viewer.view
-    setting: omero_iviewer.views.index
-  enable_open_with:
-    cmd: append
-    var: omero.web.open_with 
-    setting: '["omero_iviewer", "omero_iviewer_index", {"supported_objects":["images", "dataset", "well"], "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
-  figure_link:
-    cmd: append
-    var: omero.web.ui.top_links
-    setting: '["Figure", "figure_index", {"title": "Open Figure in new tab", "target": "_blank"}]'
-  figure_menu_option:
-    cmd: append
-    var: omero.web.open_with
-    setting: '["omero_figure", "new_figure", {"supported_objects":["images"], "target": "_blank", "label": "OMERO.figure"}]'
+python_lib_path: "/usr/lib/python2.7/site-packages"
