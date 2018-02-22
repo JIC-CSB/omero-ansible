@@ -36,7 +36,7 @@
 - name: enable 'open with...' iviewer
   become: yes
   become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} config append omero.web.open_with ['omero_iviewer', 'omero_iviewer_index', {'supported_objects':['images', 'dataset', 'well'], 'script_url': 'omero_iviewer/openwith.js', 'label': 'OMERO.iviewer'}]"
+  command: "{{ omero_cmd }} config append omero.web.open_with '[\"omero_iviewer\", \"omero_iviewer_index\", {\"supported_objects\":[\"images\", \"dataset\", \"well\"], \"script_url\": \"omero_iviewer/openwith.js\", \"label\": \"OMERO.iviewer\"}]'"
   when: check_iviewer|failed
 
 - name: check if figure has already been configured
@@ -54,13 +54,13 @@
 - name: add figure to top links
   become: yes
   become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} config append omero.web.ui.top_links ['Figure', 'figure_index', {'title': 'Open Figure in new tab', 'target': '_blank'}]"
+  command: "{{ omero_cmd }} config append omero.web.ui.top_links '[\"Figure\", \"figure_index\", {\"title\": \"Open Figure in new tab\", \"target\": \"_blank\"}]'"
   when: check_figure|failed
 
 - name: enable 'open with...' figure
   become: yes
-  become_user: "{{ omero_user }}"
-  command: "{{ omero_cmd }} config append omero.web.open_with ['omero_figure', 'new_figure', {'supported_objects':['images'], 'target': '_blank', 'label': 'OMERO.figure'}]"
+  become_user: "{{ omero_user_name }}"
+  command: "{{ omero_cmd }} config append omero.web.open_with '[\"omero_figure\", \"new_figure\", {\"supported_objects\":[\"images\"], \"target\": \"_blank\", \"label\": \"OMERO.figure\"}]'"
   when: check_figure|failed
 
 - name: upload PDF script for omero-figure
