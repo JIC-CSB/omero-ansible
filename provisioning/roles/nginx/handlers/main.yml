@@ -1,6 +1,11 @@
 ---
 
 - name: restart nginx
-  service:
-    name: nginx
-    state: restarted
+  command: service nginx restart
+
+- name: run ferm
+  command: ferm /etc/ferm/ferm.conf
+  notify: save iptables
+
+- name: save iptables
+  command: service iptables save
