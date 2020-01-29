@@ -1,24 +1,28 @@
 ---
 # Install the python package dependencies.
 
-- name: install python packages using yum
-  yum: name={{ item }}
-       state=present
-  with_items:
-    - numpy
-    - scipy
-    - Cython
-    - python-matplotlib
-    - python-pillow
+- name: install python development bundle with yum
+  yum:
+    name: python-devel
+    state: present
 
 - name: install pip
   yum: name=python-pip
        state=present
 
+- name: upgrade pip and setuptools
+  pip:
+    name: '{{ item }}'
+    extra_args: --upgrade
+  with_items:
+    - pip
+    - setuptools
+
 - name: install python packages using pip
-  pip: name={{ item }}
+  pip:
+    name: '{{ item }}'
   with_items:
     - numexpr
     - tables
-
+    - Pillow
 
