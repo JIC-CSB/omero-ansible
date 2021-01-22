@@ -27,7 +27,8 @@ Vagrant.configure(2) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 80, host: 8888
+  config.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -73,7 +74,12 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
-    config.vm.provision "ansible" do |ansible|
-        ansible.playbook = "provisioning/omero_install.yml"
-    end
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provisioning/omero_install.yml"
+  end
+
+  config.vm.provider "virtualbox" do |v|
+    v.name = "omero-cli"
+  end
+
 end
