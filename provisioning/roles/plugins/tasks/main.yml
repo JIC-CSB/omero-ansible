@@ -1,13 +1,13 @@
 ---
 # Tasks to install list of OMERO plugins
 
-- name: install dependencies
+- name: install dependencies using pip
   become: yes
-  package: 
+  pip:
     name: "{{ item }}"
     state: present
   with_items:
-    - "{{ plugin_dependencies }}"
+    - "{{ pip_dependencies }}"
 
 - name: install OMERO plugins using pip
   pip:
