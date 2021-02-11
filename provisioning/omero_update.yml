@@ -10,5 +10,9 @@
     # - postgres
     # - ice
     - get_omero_version
-    # - nginx 
-    #  - updatedb
+    # - nginx
+    - updatedb
+
+  handlers:
+    - name: Include ferm handlers
+      include: tasks/ferm/handlers/main.yml
