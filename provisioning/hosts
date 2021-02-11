@@ -1,1 +1,8 @@
-omeroserver ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222 ansible_ssh_user=root ansible_ssh_private_key_file=../.vagrant/machines/default/virtualbox/private_key
+[local]
+localhost ansible_ssh_port=2222 ansible_ssh_user=root ansible_ssh_private_key_file=.vagrant/machines/default/virtualbox/private_key
+
+[dev]
+omero-dev.scicomp.jic.ac.uk ansible_ssh_user=root
+
+[prod]
+omero.nbi.ac.uk ansible_ssh_user=root
