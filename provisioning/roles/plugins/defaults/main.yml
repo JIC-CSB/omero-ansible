@@ -1,12 +1,13 @@
 ---
 
-plugin_dependencies:
-  - python-reportlab
+pip_dependencies:
+  - reportlab
+  - markdown
 
 pip_plugins:
   # - "omero-webtagging-autotag"
   - "omero-iviewer"
-  - "omero-figure"
+  - "omero-figure==3.2.1"
 
 omero_plugin_names:
   # - "omero_webtagging_autotag"
