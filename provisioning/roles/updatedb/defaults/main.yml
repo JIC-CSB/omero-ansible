@@ -2,7 +2,7 @@
 
 # Version of OMERO we're upgrading from
 # Use omero_version from provisioning/vars.yml for new version
-old_version: 5.4.3
+old_version: 5.4.6
 old_underscore_version: "OMERO5.4__0"
 
 # Is it a major update e.g. moving from 5.3 to 5.4
@@ -19,4 +19,4 @@ copy_config: true
 
 # Path to the version we're upgrading from
 # (Need this to copy over the config)
-previous_installation: "{{ omero_home }}/OMERO.server-5.4.3-ice35-b77"
+previous_installation: "{{ omero_home }}/OMERO.server-5.4.6-ice36-b87"
