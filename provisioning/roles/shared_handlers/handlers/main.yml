@@ -1,0 +1,8 @@
+---
+
+- name: run ferm
+  command: ferm /etc/ferm/ferm.conf
+  notify: save iptables
+
+- name: save iptables
+  command: service iptables save
