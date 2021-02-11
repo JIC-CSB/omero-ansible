@@ -1,7 +1,7 @@
 ---
 # Get the tarball of OMERO.server that matches {{ omero_version }}
 
-- name: download and uninstall the omero tarball
+- name: download and unpackage the omero tarball
   unarchive:
     src: "http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip"
     remote_src: yes
@@ -42,8 +42,13 @@
 
 # Switch off httpd
 
+- name: check if Apache is present
+  stat: path=/etc/init.d/httpd
+  register: service_status
+
 - name: disable Apache httpd
   become: yes
-  service: 
+  service:
     name: httpd
     enabled: no
+  when: service_status.stat.exists
