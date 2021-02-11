@@ -20,9 +20,9 @@
   with_items:
     - bzip2-devel
     - openssl-devel
-  
+
 - name: install ICE Python modules
-  pip: 
+  pip:
     name: zeroc-ice
     version: 3.6
 
