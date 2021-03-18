@@ -14,4 +14,4 @@ omero_plugin_names:
   - "omero_iviewer"
   - "omero_figure"
 
-python_lib_path: "/usr/lib/python2.7/site-packages"
+python_lib_path: "/usr/lib/python3.6/site-packages"
