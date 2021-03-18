@@ -10,8 +10,9 @@ Type=forking
 PIDFile=/home/omero/OMERO.server/var/django.pid
 Restart=no
 RestartSec=10
+Environment="OMERO_TMPDIR=/omero_tmp"
 ExecStart=/home/omero/OMERO.server/bin/omero web start
-ExecStop=/bin/python /home/omero/OMERO.server/bin/omero web stop
+ExecStop=/home/omero/OMERO.server/bin/omero web stop
 
 [Install]
 WantedBy=multi-user.target
