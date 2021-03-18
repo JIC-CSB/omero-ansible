@@ -8,12 +8,7 @@
 ###################################################################
 
 - name: install other packages
-  yum: name="{{ item }}"
-       state=present
-  with_items:
-    - libdb-utils
-    - expat-devel
-    - java-1.8.0-openjdk
+  yum: name=[ libdb-utils, expat-devel, java-1.8.0-openjdk ]
 
 ###################################################################
 # Create and configure the omero user.
@@ -197,11 +192,29 @@
     state: link
 
 ###################################################################
-# Set up temporary directory for exports, etc.
+# Set up omero-admin and omero-web to run as systemd services
 ###################################################################
 
-- name: mount HD for temporary files
+- name: create omero-admin service file
+  copy:
+    src: omero-admin.service
+    dest: /etc/systemd/system
 
+- name: create omero-web service file
+  copy:
+    src: omero-web.service
+    dest: /etc/systemd/system
 
-- name: set OMERO's TMP_DIR variable
-  
+- name: start omero-admin service
+  systemd:
+    name: omero-admin
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: start omero-web service
+  systemd:
+    name: omero-web
+    daemon_reload: yes
+    enabled: yes
+    state: started
