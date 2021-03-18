@@ -7,11 +7,11 @@ After=network.service
 [Service]
 User=omero
 Type=forking
-PIDFile=/home/omero/OMERO.py/var/django.pid
+PIDFile=/home/omero/OMERO.server/var/django.pid
 Restart=no
 RestartSec=10
-ExecStart=/bin/python /home/omero/OMERO.py/bin/omero web start
-ExecStop=/bin/python /home/omero/OMERO.py/bin/omero web stop
+ExecStart=/home/omero/OMERO.server/bin/omero web start
+ExecStop=/bin/python /home/omero/OMERO.server/bin/omero web stop
 
 [Install]
 WantedBy=multi-user.target
