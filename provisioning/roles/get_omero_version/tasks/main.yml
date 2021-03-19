@@ -18,10 +18,19 @@
     dest: "{{ omero_home }}/{{ omero_server_link }}"
     state: link
 
+- name: check if there are prerequisite python modules
+  stat:
+    path: "{{ omero_home }}/{{ omero_server_link }}{{ python_requirements }}"
+  register: has_prequisites
+  when: python_requirements is defined
+
 - name: install OMERO prerequisite software
   become: yes
   become_user: root
-  pip: requirements="{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27.txt"
+  pip:
+    requirements: "{{ omero_home }}/{{ omero_server_link }}{{ python_requirements }}"
+    executable: "{{ pip_executable }}"
+  when: has_prequisites
 
 # Configure the web server
 
@@ -37,18 +46,13 @@
 
 # Install Django.
 
+- name: check for any django requirements file
+  stat:
+    src: "{{ django_requirements }}"
+  when: django_requirements is defined
+  register: django_required
+
 - name: install django
-  pip: requirements={{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
-
-# Switch off httpd
-
-- name: check if Apache is present
-  stat: path=/etc/init.d/httpd
-  register: service_status
-
-- name: disable Apache httpd
-  become: yes
-  service:
-    name: httpd
-    enabled: no
-  when: service_status.stat.exists
+  pip:
+    requirements: {{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
+  when: django_required

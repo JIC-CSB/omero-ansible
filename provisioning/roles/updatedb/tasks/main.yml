@@ -37,4 +37,4 @@
     src: "{{ previous_installation }}/etc/grid/config.xml"
     dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
     remote_src: yes
-   when: copy_config
+  when: copy_config
