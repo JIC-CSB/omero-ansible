@@ -22,12 +22,13 @@
 #    state: restore
 #    target: "{{ omero_update_patch }}"
 #    owner: "{{ omero_db_user }}"
+#  when: omero_schema_version != old_version
 
 - name: use shell to patch the DB to new version
   become: yes
   become_user: "{{ omero_user_name }}"
   shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_update_patch }} > {{ omero_update_db_output }}"
-  when: major_update
+  when: omero_schema_version != old_version
 
 - name: copy config of older version
   become: yes
@@ -36,4 +37,4 @@
     src: "{{ previous_installation }}/etc/grid/config.xml"
     dest: "{{ omero_home }}/{{ omero_server_link }}/etc/grid/config.xml"
     remote_src: yes
-  when: copy_config
+   when: copy_config

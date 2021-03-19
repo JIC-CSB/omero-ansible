@@ -7,10 +7,8 @@
     - vars.yml
 
   roles:
-    # - postgres
-    # - ice
+    - python
     - get_omero_version
-    # - nginx
     - updatedb
 
   handlers:
