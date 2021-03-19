@@ -14,12 +14,12 @@
   pip:
     name: [ pip, setuptools ]
     extra_args: --upgrade
-    executable: pip3
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
 
 - name: install python packages using pip
   pip:
     name: '{{ item }}'
-    executable: pip3
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
   with_items:
     - numexpr
     - tables

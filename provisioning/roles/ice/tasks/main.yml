@@ -25,6 +25,7 @@
   pip:
     name: zeroc-ice
     version: 3.6
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
 
 - name: open up the ICE port
   lineinfile:

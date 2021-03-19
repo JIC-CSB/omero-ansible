@@ -6,12 +6,14 @@
   pip:
     name: "{{ item }}"
     state: present
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
   with_items:
     - "{{ pip_dependencies }}"
 
 - name: install OMERO plugins using pip
   pip:
     name: "{{ item }}"
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
   with_items:
     - "{{ pip_plugins }}"
 

@@ -29,8 +29,8 @@
   become_user: root
   pip:
     requirements: "{{ omero_home }}/{{ omero_server_link }}{{ python_requirements }}"
-    executable: "{{ pip_executable }}"
-  when: has_prequisites
+    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
+  when: (has_prequisites) and (pip_executable is defined)"
 
 # Configure the web server
 
@@ -54,5 +54,5 @@
 
 - name: install django
   pip:
-    requirements: {{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt
+    requirements: "{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27-nginx.txt"
   when: django_required
