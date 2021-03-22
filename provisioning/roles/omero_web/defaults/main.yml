@@ -1,0 +1,5 @@
+---
+
+web_venv: "/opt/omero/web/venv3"
+omero_web_dir: "/opt/omero/web/omero-web"
+omero_web_cmd: "{{ web_venv }}/bin/omero"

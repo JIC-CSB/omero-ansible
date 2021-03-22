@@ -1,0 +1,2 @@
+export WEBSESSION=True
+export OMERODIR={{ omero_web_dir }}

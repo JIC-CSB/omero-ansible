@@ -1,0 +1,148 @@
+---
+
+###################################################################
+# Configure the OMERO web user
+###################################################################
+
+- name: create the omero web user
+  user:
+    name: "{{ omero_web_user }}"
+    group: "{{ omero_user_group }}"
+    uid: "{{ omero_web_uid }}"
+    password: "{{ omero_web_password }}"
+
+###################################################################
+# Configure the OMERO web server.
+###################################################################
+
+# setup omero-web's virtualenv
+
+- name: create omero-web venv directory
+  file:
+    name: "{{ web_venv }}"
+    state: directory
+    owner: "{{ omero_web_user }}"
+    group: "{{ omero_user_group }}"
+
+- name: create omero-web directory
+  file:
+    name: "{{ omero_web_dir }}"
+    state: directory
+    owner: "{{ omero_web_user }}"
+    group: "{{ omero_user_group }}"
+
+- name: create grid directory
+  file:
+    name: "{{ web_venv }}/lib64/etc/grid"
+    state: directory
+    owner: "{{ omero_web_user }}"
+    group: "{{ omero_user_group }}"
+
+- name: install ICE Python modules
+  become: yes
+  become_user: "{{ omero_web_user }}"
+  pip:
+    name: "https://github.com/ome/zeroc-ice-py-centos7/releases/download/0.2.1/zeroc_ice-3.6.5-cp36-cp36m-linux_x86_64.whl"
+    virtualenv: "{{ web_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
+
+- name: install OMERO.web
+  pip:
+    name: "omero-web>=5.6.1"
+    virtualenv: "{{ web_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
+  become: yes
+  become_user: "{{ omero_web_user }}"
+
+# setup cached sessions with redis
+
+- name: install Redis
+  yum:
+    name: redis
+
+# - name: install django-redis module
+#   become: yes
+#   become_user: "{{ omero_web_user }}"
+#   pip:
+#     name: "django-redis<4.9"
+#     virtualenv: "{{ web_venv }}"
+#     virtualenv_command: "{{ python3_exec }} -m venv"
+#
+# - name: set the redis to handle cached sessions
+#   become: yes
+#   become_user: "{{ omero_web_user }}"
+#   command: "{{ item }}"
+#   loop:
+#     - "{{ omero_web_cmd }} config set omero.web.caches '{\"default\": {\"BACKEND\": \"django_redis.cache.RedisCache\",\"LOCATION\": \"redis://127.0.0.1:6379/0\"}}'"
+#     - "{{ omero_web_cmd }} config set omero.web.session_engine django.contrib.sessions.backends.cache"
+#   environment:
+#     OMERODIR: "{{ omero_web_dir }}"
+#
+# - name: enable and start redis
+#   service:
+#     name: redis
+#     enabled: yes
+#     state: started
+
+- name: install whitenoise module
+  become: yes
+  become_user: "{{ omero_web_user }}"
+  pip:
+    name: whitenoise
+    virtualenv: "{{ web_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
+
+- name: configure whitenoise
+  become: yes
+  become_user: "{{ omero_web_user }}"
+  command: "{{ omero_web_cmd }} config append -- omero.web.middleware '{\"index\": 0, \"class\": \"whitenoise.middleware.WhiteNoiseMiddleware\"}'"
+  environment:
+    OMERODIR: "{{ omero_web_dir }}"
+
+# - name: configure the omero web application server
+#   become: yes
+#   become_user: "{{ omero_web_user }}"
+#   command: "{{ omero_web_cmd }} config set omero.web.application_server wsgi-tcp"
+
+- name: create symlinks for static media files
+  become: yes
+  become_user: "{{ omero_web_user }}"
+  command: "{{ omero_web_cmd }} web syncmedia"
+  environment:
+    OMERODIR: "{{ omero_web_dir }}"
+
+- name: create the nginx configuration file
+  become: yes
+  become_user: "{{ omero_web_user }}"
+  shell: "{{ omero_web_cmd }} web config nginx --http 80 --servername {{ inventory_hostname }} > {{ omero_web_dir }}/omero.conf"
+  environment:
+    OMERODIR: "{{ omero_web_dir }}"
+
+- name: put nginx config file in nginx config area
+  become: yes
+  copy:
+    src: "{{ omero_web_dir }}/omero.conf"
+    dest: /etc/nginx/conf.d/
+    remote_src: yes
+  notify: restart nginx
+
+###################################################################
+# Set logs to be written to mounted disk
+###################################################################
+
+# - name: remove OMERO's default var/log directory
+#   file:
+#     path: "{{ omero_home }}/{{ omero_server_link }}/var/log"
+
+- name: create omero-web service file
+  template:
+    src: omero-web.service
+    dest: /etc/systemd/system
+    mode: 0755
+
+- name: start omero-web service
+  systemd:
+    name: omero-web
+    daemon_reload: yes
+    enabled: yes
+    state: started
