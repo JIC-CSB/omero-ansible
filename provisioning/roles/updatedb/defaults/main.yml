@@ -4,7 +4,7 @@
 # Use omero_version from provisioning/vars.yml for new version
 old_version: 5.5.1
 old_build: 122
-old_schema_version: "OMERO5.4__0"
+old_schema_version: "OMERO5.4"
 
 # Path to the SQL file that updates the OMERO schema
 omero_update_patch: "{{ omero_home }}/{{ omero_server_link }}/sql/psql/{{ omero_schema_version }}/{{ old_schema_version }}.sql"
