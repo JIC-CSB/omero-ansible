@@ -27,12 +27,10 @@ Vagrant.configure(2) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-  config.vm.network "forwarded_port", guest: 80, host: 8888
-  config.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  #config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "private_network", ip: "192.168.99.32"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -74,12 +72,9 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "provisioning/omero_install.yml"
-  end
-
-  config.vm.provider "virtualbox" do |v|
-    v.name = "omero-cli"
-  end
-
+  config.vm.provision "shell", inline: <<-SHELL
+    mkdir -p /root/.ssh
+    cp /home/vagrant/.ssh/* /root/.ssh/
+  SHELL
 end
+
