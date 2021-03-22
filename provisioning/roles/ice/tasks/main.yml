@@ -8,24 +8,13 @@
 
 - name: install ICE packages
   yum:
-    name: "{{ item }}"
+    name: [ glacier2, icebox, icegrid, icepatch2, libfreeze3.6-c++, libicestorm3.6 ]
     state: present
-  with_items:
-    - ice-all-runtime
-    - ice-all-devel
 
 - name: install other packages
-  yum: name={{ item }}
-       state=present
-  with_items:
-    - bzip2-devel
-    - openssl-devel
-
-- name: install ICE Python modules
-  pip:
-    name: zeroc-ice
-    version: 3.6
-    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
+  yum:
+    name: [ bzip2-devel, openssl-devel ]
+    state: present
 
 - name: open up the ICE port
   lineinfile:

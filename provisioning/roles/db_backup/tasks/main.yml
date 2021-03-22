@@ -2,7 +2,7 @@
 
 - name: create the omero backup directory
   file: path={{ omero_backup_dir }}
-        owner="{{ omero_user_name }}"
+        owner="{{ omero_admin_user }}"
         state=directory
 
 - name: add cron job to backup postgres db

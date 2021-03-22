@@ -2,5 +2,6 @@
 # This playbook adds the epel repository.
 
 - name: add the epel repository
-  yum: name=epel-release
-       state=present
+  package:
+    name: epel-release
+    state: present

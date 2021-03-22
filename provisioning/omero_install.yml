@@ -11,13 +11,13 @@
   roles:
     - epel
     - build_tools
-    - hdf5
     - ferm
     - nginx
     - postgres
     - python
     - ice
     - omero
+    - omero_web
     - db_backup
 
   tasks:

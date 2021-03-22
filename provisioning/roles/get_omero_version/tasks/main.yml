@@ -30,7 +30,7 @@
   pip:
     requirements: "{{ omero_home }}/{{ omero_server_link }}{{ python_requirements }}"
     executable: "{{ pip_executable | default('/usr/bin/pip') }}"
-  when: (has_prequisites) and (pip_executable is defined)"
+  when: (has_prequisites) and (pip_executable is defined) and (python_requirements is defined)
 
 # Configure the web server
 

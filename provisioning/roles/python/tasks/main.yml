@@ -3,25 +3,5 @@
 
 - name: install python development bundle with yum
   yum:
-    name: python3-devel
+    name: [ python-setuptools, python3-devel, python3-pip, python3-setuptools ]
     state: present
-
-- name: install pip
-  yum: name=python3-pip
-       state=present
-
-- name: upgrade pip and setuptools
-  pip:
-    name: [ pip, setuptools ]
-    extra_args: --upgrade
-    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
-
-- name: install python packages using pip
-  pip:
-    name: '{{ item }}'
-    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
-  with_items:
-    - numexpr
-    - tables
-    - Pillow
-

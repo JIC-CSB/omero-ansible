@@ -2,52 +2,76 @@
 
 # Download and install OMERO.
 
-
 ###################################################################
 # Install OMERO server dependencies.
 ###################################################################
 
 - name: install other packages
-  yum: name=[ libdb-utils, expat-devel, java-1.8.0-openjdk ]
+  yum:
+    name: [ libdb-utils, expat-devel, java-11-openjdk ]
 
 ###################################################################
-# Create and configure the omero user.
+# Create and configure the omero admin user.
 ###################################################################
 
-- name: create the omero user
+- name: create the omero group
+  group:
+    name: "{{ omero_user_group }}"
+    state: present
+
+- name: create the omero admin user
   user:
-    name: "{{ omero_user_name }}"
-    uid: "{{ omero_uid }}"
-    password: "{{ omero_user_password }}"
+    name: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
+    uid: "{{ omero_admin_uid }}"
+    password: "{{ omero_admin_password }}"
 
-- name: set permissions of the omero users home directory
-  file: path="{{ omero_home }}"
-        mode=755
-        state=directory
+- name: create grid directory
+  file:
+    path: "{{ python_venv }}/lib64/etc/grid"
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
+    state: directory
+    mode: 0775
+
+- name: create omero home directory
+  file:
+    path: "{{ omero_home }}"
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
+    state: directory
+    mode: 0775
 
 - name: add omero bashrc file
-  template: src=bashrc
-            dest="{{ omero_home }}/.bashrc"
-            owner="{{ omero_user_name }}"
+  template:
+    src: bashrc
+    dest: "/home/{{ omero_admin_user }}/.bashrc"
+    owner: "{{ omero_admin_user }}"
 
 ###################################################################
 # Configure the OMERO data directory.
 ###################################################################
 
 - name: create the actual omero data directory
-  file: path="{{ omero_data_dir }}"
-        owner="{{ omero_user_name }}"
-        state=directory
+  file:
+    path: "{{ omero_data_dir }}"
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
+    state: directory
 
 - name: create link between actual omero data dir and OMERO dir
-  file: src="{{ omero_data_dir }}"
-        dest=/OMERO
-        state=link
+  file:
+    src: "{{ omero_data_dir }}"
+    dest: "/OMERO"
+    state: link
 
 - name: ensure that temp directory exists
   file:
     path: "{{ omero_tmpdir }}"
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
     state: directory
+    mode: 0770
 
 ###################################################################
 # Download, install and configure the OMERO server.
@@ -58,41 +82,66 @@
     src: "http://downloads.openmicroscopy.org/omero/{{ omero_version }}/artifacts/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}.zip"
     remote_src: yes
     dest: "{{ omero_home }}"
-    owner: "{{ omero_user_name }}"
-    group: "{{ omero_user_name }}"
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
     creates: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}/LICENSE.txt"
 
 - name: make a symbolic link to the omero server directory
   become: yes
-  become_user: "{{ omero_user_name }}"
+  become_user: "{{ omero_admin_user }}"
   file:
     src: "{{ omero_home }}/OMERO.server-{{ omero_version }}-{{ ice_version }}-{{ omero_branch }}"
-    dest: "{{ omero_home }}/{{ omero_server_link }}"
+    dest: "{{ omero_dir }}"
     state: link
 
-- name: check if there are prerequisite python modules
-  stat:
-    path: "{{ omero_home }}/{{ omero_server_link }}{{ python_requirements }}"
-  register: has_prequisites
-  when: python_requirements is defined
+###################################################################
+# Setup OMERO.py
+###################################################################
 
-- name: install OMERO prerequisite software
+- name: create directory for virtualenv
   become: yes
-  become_user: root
+  become_user: "{{ omero_admin_user }}"
+  file:
+    dest: "{{ python_venv }}"
+    state: directory
+    owner: "{{ omero_admin_user }}"
+    group: "{{ omero_user_group }}"
+
+- name: install python packages using pip
+  become: yes
+  become_user: "{{ omero_admin_user }}"
   pip:
-    requirements: "{{ omero_home }}/{{ omero_server_link }}/share/web/requirements-py27.txt"
-    extra_args: --upgrade
-    executable: "{{ pip_executable | default('/usr/bin/pip') }}"
-  when: (has_prequisites) and (pip_executable is defined)"
+    name: [ setuptools, numexpr, tables, Pillow ]
+    virtualenv: "{{ python_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
 
-- name: configure the omero database
+- name: install ICE Python modules
   become: yes
-  become_user: "{{ omero_user_name }}"
+  become_user: "{{ omero_admin_user }}"
+  pip:
+    name: "https://github.com/ome/zeroc-ice-py-centos7/releases/download/0.2.1/zeroc_ice-3.6.5-cp36-cp36m-linux_x86_64.whl"
+    virtualenv: "{{ python_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
+
+- name: install OMERO.py
+  become: yes
+  become_user: "{{ omero_admin_user }}"
+  pip:
+    name: omero-py>=5.8.0
+    virtualenv: "{{ python_venv }}"
+    virtualenv_command: "{{ python3_exec }} -m venv"
+
+- name: configure the omero database connection settings
+  become: yes
+  become_user: "{{ omero_admin_user }}"
   command: "{{ omero_cmd }} config set {{ item.key }} {{ item.value }}"
   with_items:
+    - { key: 'omero.data.dir', value: '{{ omero_data_dir }}' }
     - { key: 'omero.db.name', value: '{{ omero_db_name }}' }
     - { key: 'omero.db.user', value: '{{ omero_db_user }}' }
     - { key: 'omero.db.pass', value: '{{ omero_db_pass }}' }
+  environment:
+    OMERODIR: "{{ omero_dir }}"
 
 - name: open up the omero specific ports
   lineinfile:
@@ -105,62 +154,36 @@
 # Configure the postgres database.
 ###################################################################
 
-- name: create the omero postgres user
-  become: yes
-  become_user: postgres
-  postgresql_user:
-    name: "{{ omero_db_user }}"
-    password: "{{ omero_db_pass }}"
-    role_attr_flags: "NOSUPERUSER,NOCREATEDB,NOCREATEROLE"
-
 - name: create the omero postgres database
   become: yes
   become_user: postgres
   postgresql_db:
     name: "{{ omero_db_name }}" 
-    owner: "{{ omero_db_user }}"
+    state: present
   register: created_omero_database
+
+- name: create the omero postgres user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    db: "{{ omero_db_name }}"
+    name: "{{ omero_db_user }}"
+    password: "{{ omero_db_pass }}"
+    role_attr_flags: "NOSUPERUSER,CREATEDB"
 
 - name: create omero sql script
   become: yes
-  become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} db script --password {{ omero_root_password  }}"
+  become_user: "{{ omero_admin_user }}"
+  command: "{{ omero_cmd }} db script --password {{ omero_root_password }} --version {{ omero_schema_version }} --patch {{ omero_schema_patch }} --file {{ omero_dir }}/etc/omero.properties -f {{ omero_dir }}/{{ omero_schema_sql }}"
   args:
     creates: "{{ omero_home }}/{{ omero_schema_sql }}"
+  environment:
+    OMERODIR: "{{ omero_dir }}"
 
 - name: create omero schema
   become: yes
-  become_user: "{{ omero_user_name }}"
-  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_home }}/{{ omero_schema_sql }}"
-  when: created_omero_database|changed
-
-###################################################################
-# Configure the OMERO web server.
-###################################################################
-
-- name: configure the omero web application server
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} config set omero.web.application_server wsgi-tcp"
-
-- name: create symlinks for static media files
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  command: "{{ omero_cmd }} web syncmedia"
-
-# Use shell instead of command to allow the piping of the output.
-- name: create the nginx configuration file
-  become: yes
-  become_user: "{{ omero_user_name }}"
-  shell: "{{ omero_cmd }} web config nginx --http 80 --servername {{ inventory_hostname }} > {{ omero_home }}/omero.conf"
-
-- name: put nginx config file in nginx config area
-  become: yes
-  copy:
-    src: "{{ omero_home }}/omero.conf"
-    dest: /etc/nginx/conf.d/
-    remote_src: yes
-  notify: restart nginx
+  become_user: "{{ omero_admin_user }}"
+  shell: "PGPASSWORD={{ omero_db_pass }} psql -w -h localhost -U {{ omero_db_user }} {{ omero_db_name }} < {{ omero_dir }}/{{ omero_schema_sql }}"
 
 ###################################################################
 # Configure /etc/hosts file with FQDN hostname.
@@ -190,39 +213,28 @@
   file:
     path: "{{ omero_data_dir }}/{{ inventory_hostname }}/OMERO/var_log"
     state: directory
-    owner: "{{ omero_user_name }}"
+    owner: "{{ omero_admin_user }}"
 
 - name: create link to data mount for OMERO's var/log
   file:
     src: "{{ omero_data_dir }}/{{ inventory_hostname }}/OMERO/var_log"
     dest: "{{ omero_home }}/{{ omero_server_link }}/var/log"
-    owner: "{{ omero_user_name }}"
+    owner: "{{ omero_admin_user }}"
     state: link
 
 ###################################################################
-# Set up omero-admin and omero-web to run as systemd services
+# Set up omero-admin to run as a systemd service
 ###################################################################
 
 - name: create omero-admin service file
-  copy:
+  template:
     src: omero-admin.service
     dest: /etc/systemd/system
-
-- name: create omero-web service file
-  copy:
-    src: omero-web.service
-    dest: /etc/systemd/system
+    mode: 0755
 
 - name: start omero-admin service
   systemd:
     name: omero-admin
-    daemon_reload: yes
-    enabled: yes
-    state: started
-
-- name: start omero-web service
-  systemd:
-    name: omero-web
     daemon_reload: yes
     enabled: yes
     state: started
